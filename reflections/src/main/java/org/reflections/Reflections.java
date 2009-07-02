@@ -1,12 +1,16 @@
 package org.reflections;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
-import static com.google.common.collect.Iterables.newArray;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.thoughtworks.xstream.XStream;
-import jsr166y.forkjoin.Ops;
-import jsr166y.forkjoin.ParallelArray;
-import jsr166y.forkjoin.ForkJoinPool;
+//import jsr166y.forkjoin.Ops;
+//import jsr166y.forkjoin.ParallelArray;
+//import jsr166y.forkjoin.ForkJoinPool;
+import org.reflections.adapters.ForkJoiner;
+import org.reflections.adapters.ForkJoinerWrapper;
+import org.reflections.adapters.SimpleForkJoiner;
 import org.reflections.filters.Filter;
 import org.reflections.scanners.*;
 import org.reflections.scanners.Scanner;
@@ -28,6 +32,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -47,8 +52,7 @@ public class Reflections {
 
 	private Configuration configuration;
 	private final Store store;
-	private final ForkJoinPool forkJoinPool = new ForkJoinPool();
-
+	
 	/** Reflections scan according to configuration */
 	public Reflections(final Configuration configuration) {
 		this.configuration = configuration;
@@ -165,12 +169,18 @@ public class Reflections {
 	public Set<Method> getMethodsAnnotatedWith(Class<? extends Annotation> annotation) {
 		Collection<String> annotatedWith = store.get(MethodAnnotationsScanner.indexName).get(annotation.getName());
 		if (annotatedWith != null) {
-			ParallelArray<String> parallelArray = ParallelArray.createFromCopy(newArray(annotatedWith, String.class), forkJoinPool);
-			return ImmutableSet.of(parallelArray.withMapping(new Ops.Mapper<String, Method>() {
-				public Method map(String annotated) {
+			return ImmutableSet.copyOf(ForkJoinerWrapper.parallelTransform(configuration.getForkJoiner(), annotatedWith, new Function<String, Method>() {
+				public Method apply(String annotated) {
 					return getMethodFromString(annotated);
 				}
-			}).all().getArray());
+			}, String.class));
+			
+//			ParallelArray<String> parallelArray = ParallelArray.createFromCopy(Iterables.toArray(annotatedWith, String.class), forkJoinPool);
+//			return ImmutableSet.of(parallelArray.withMapping(new Ops.Mapper<String, Method>() {
+//				public Method map(String annotated) {
+//					return getMethodFromString(annotated);
+//				}
+//			}).all().getArray());
 //			return ImmutableSet.of(methods);
 		} else {
 			return Collections.emptySet();
@@ -207,12 +217,19 @@ public class Reflections {
 	public Set<Field> getFieldsAnnotatedWith(Class<? extends Annotation> annotation) {
 		Collection<String> annotatedWith = store.get(FieldAnnotationsScanner.indexName).get(annotation.getName());
 		if (annotatedWith != null) {
-			ParallelArray<String> parallelArray = ParallelArray.createFromCopy(newArray(annotatedWith, String.class), forkJoinPool);
-			return ImmutableSet.of(parallelArray.withMapping(new Ops.Mapper<String, Field>() {
-				public Field map(String annotated) {
+			return ImmutableSet.copyOf(ForkJoinerWrapper.parallelTransform(configuration.getForkJoiner(), annotatedWith, new Function<String, Field>() {
+				public Field apply(String annotated) {
 					return getFieldFromString(annotated);
 				}
-			}).all().getArray());
+			}, String.class));
+			
+			
+//			ParallelArray<String> parallelArray = ParallelArray.createFromCopy(Iterables.toArray(annotatedWith, String.class), forkJoinPool);
+//			return ImmutableSet.of(parallelArray.withMapping(new Ops.Mapper<String, Field>() {
+//				public Field map(String annotated) {
+//					return getFieldFromString(annotated);
+//				}
+//			}).all().getArray());
 		} else {
 			return Collections.emptySet();
 		}

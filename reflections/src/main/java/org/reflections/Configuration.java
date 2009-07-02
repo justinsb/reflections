@@ -1,5 +1,6 @@
 package org.reflections;
 
+import org.reflections.adapters.ForkJoiner;
 import org.reflections.adapters.MetadataAdapter;
 import org.reflections.scanners.Scanner;
 import org.reflections.filters.Filter;
@@ -26,4 +27,6 @@ public interface Configuration {
     void setMetadataAdapter(MetadataAdapter metadataAdapter);
 
 	void applyUniversalFilter(Filter<String> filter);
+	
+	ForkJoiner getForkJoiner();
 }

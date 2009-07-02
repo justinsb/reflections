@@ -1,8 +1,10 @@
 package org.reflections.util;
 
 import org.reflections.Configuration;
+import org.reflections.adapters.ForkJoiner;
 import org.reflections.adapters.JavassistAdapter;
 import org.reflections.adapters.MetadataAdapter;
+import org.reflections.adapters.SimpleForkJoiner;
 import org.reflections.filters.Filter;
 import org.reflections.scanners.Scanner;
 
@@ -20,6 +22,8 @@ public class AbstractConfiguration implements Configuration {
     private List<Scanner> scanners;
     private Collection<URL> urls;
     private MetadataAdapter metadataAdapter = new JavassistAdapter();
+
+    private ForkJoiner forkJoiner = SimpleForkJoiner.buildDefault();
 
     public List<Scanner> getScanners() {
 		return scanners;
@@ -49,5 +53,13 @@ public class AbstractConfiguration implements Configuration {
 		for (Scanner scanner : scanners) {
 			scanner.filterBy(filter);
 		}
+	}
+
+	public ForkJoiner getForkJoiner() {
+		return forkJoiner;
+	}
+
+	public void setForkJoiner(ForkJoiner forkJoiner) {
+		this.forkJoiner = forkJoiner;
 	}
 }

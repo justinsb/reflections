@@ -1,16 +1,24 @@
 package org.reflections.scanners;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import org.reflections.Configuration;
+import org.reflections.ReflectionsException;
 import org.reflections.filters.Filter;
 import org.reflections.filters.Any;
+import org.reflections.adapters.ForkJoiner;
+import org.reflections.adapters.ForkJoinerWrapper;
 import org.reflections.adapters.MetadataAdapter;
 
 /**
  *
  */
-@SuppressWarnings({"RawUseOfParameterizedType", "unchecked"})
+@SuppressWarnings( { "RawUseOfParameterizedType", "unchecked" })
 public abstract class AbstractScanner implements Scanner {
 
 	private Configuration configuration;
@@ -32,6 +40,14 @@ public abstract class AbstractScanner implements Scanner {
 
 	protected MetadataAdapter getMetadataAdapter() {
 		return configuration.getMetadataAdapter();
+	}
+
+	protected ForkJoiner getForkJoiner() {
+		return configuration.getForkJoiner();
+	}
+
+	protected <K, V> List<V> parallelTransform(Iterable<K> source, final Function<K, V> function, Class<K> keyClass) throws ReflectionsException {
+		return ForkJoinerWrapper.parallelTransform(getForkJoiner(), source, function, keyClass);
 	}
 
 	protected void populate(final String key, final String value) {

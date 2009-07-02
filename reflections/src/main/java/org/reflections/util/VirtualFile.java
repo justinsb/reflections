@@ -71,6 +71,10 @@ public abstract class VirtualFile {
         }
 
 		File file = new File(uri);
+		if (!file.exists()) {
+		    throw new ReflectionsException("File does not exist: " + url);
+		}
+		
 		if (file.isDirectory()) {
             return iterable(file);
         }
@@ -79,11 +83,11 @@ public abstract class VirtualFile {
             try {
                 return iterable(new JarFile(file));
             } catch (IOException e) {
-                throw new ReflectionsException("Couln't iterate over Jar: " + url, e);
+                throw new ReflectionsException("Could not iterate over Jar: " + url, e);
             }
         }
 
-        throw new ReflectionsException("could not create iterator of VirtualFiles from url " + url);
+        throw new ReflectionsException("Could not create iterator of VirtualFiles from url " + url);
     }
 
     public static Iterable<VirtualFile> iterable(final File dir) {

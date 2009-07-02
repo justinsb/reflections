@@ -2,13 +2,13 @@ package org.reflections.scanners;
 
 import com.google.common.collect.Multimap;
 import org.reflections.Configuration;
+import org.reflections.Reflections;
 import org.reflections.filters.Filter;
 
 /**
  *
  */
 public interface Scanner {
-
 	void scan(final Object cls);
 
 	void setConfiguration(Configuration configuration);
