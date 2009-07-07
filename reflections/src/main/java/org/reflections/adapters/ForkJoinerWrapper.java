@@ -8,6 +8,9 @@ import org.reflections.ReflectionsException;
 import com.google.common.base.Function;
 
 public class ForkJoinerWrapper {
+	private ForkJoinerWrapper() {
+	}
+	
 	/**
 	 * Runs a multi-threaded transform task, wrapping the exceptions appropriately.
 	 * 

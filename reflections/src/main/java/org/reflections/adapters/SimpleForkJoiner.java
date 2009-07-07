@@ -1,7 +1,6 @@
 package org.reflections.adapters;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -19,8 +18,8 @@ import com.google.common.collect.Lists;
  * @author justinsb
  * 
  */
-public class SimpleForkJoiner implements ForkJoiner {
-	final ExecutorService executorService;
+public final class SimpleForkJoiner implements ForkJoiner {
+	private final ExecutorService executorService;
 
 	public static SimpleForkJoiner buildDefault() {
 		// TODO: Base off number of CPUs
@@ -60,8 +59,9 @@ public class SimpleForkJoiner implements ForkJoiner {
 
 		for (Future<V> future : futures) {
 			V result = future.get();
-			if (destination != null)
+			if (destination != null) {
 				destination.add(result);
+			}
 		}
 
 		return destination;

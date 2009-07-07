@@ -9,11 +9,9 @@ import jsr166y.forkjoin.Ops;
 import jsr166y.forkjoin.ParallelArray;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
-public class Jsr166ForkJoiner implements ForkJoiner {
+public final class Jsr166ForkJoiner implements ForkJoiner {
 	private final ForkJoinPool forkJoinPool = new ForkJoinPool();
 
 	public <K, V> List<V> transform(Iterable<K> source, final Function<K, V> function, Class<K> keyClass) throws InterruptedException, ExecutionException {
