@@ -40,11 +40,11 @@ public abstract class VirtualFile {
 	public static VirtualFile create(final JarFile jarFile, final JarEntry entry) {
 		return new VirtualFile() {
 			public InputStream getInputStream() throws IOException {
-				try {
+//				try {
 					return jarFile.getInputStream(entry);
-				} catch (IOException e) {
-					throw new IOException("Can't open a Jar file input stream " + jarFile.getName(), e);
-				}
+//				} catch (IOException e) {
+//					throw new IOException("Can't open a Jar file input stream " + jarFile.getName(), e);
+//				}
 			}
 
 			public String getName() {
