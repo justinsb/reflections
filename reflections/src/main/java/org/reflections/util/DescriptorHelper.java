@@ -5,6 +5,8 @@ import static org.reflections.util.ReflectionUtil.resolveClass;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.reflections.ReflectionsException;
+
 /**
  *
  */
@@ -38,6 +40,7 @@ public class DescriptorHelper {
 
     /**
      * I[Ljava.lang.String; -> int, java.lang.String[]
+     * @throws ReflectionsException 
      */
     public static List<Class<?>> descriptorToTypes(final String descriptor) {
         List<Class<?>> result = new ArrayList<Class<?>>();
@@ -55,8 +58,9 @@ public class DescriptorHelper {
 
     /**
      * I -> Integer.TYPE ; [Ljava.lang.String; -> java.lang.String[]
+     * @throws ReflectionsException 
      */
-    public static Class<?> typeNameToType(final String type) {
+    public static Class<?> typeNameToType(final String type)  {
         Class<?> aClass;
 
         if (type.startsWith("[")) {

@@ -2,6 +2,8 @@ package org.reflections.scanners;
 
 import java.util.List;
 
+import org.reflections.ReflectionsException;
+
 /**
  *
  */
@@ -9,7 +11,7 @@ import java.util.List;
 public class MethodAnnotationsScanner extends AbstractScanner {
     public static final String indexName = "MethodAnnotations";
 
-    public void scan(final Object cls) {
+    public void scan(final Object cls) throws ReflectionsException {
 		String className = getMetadataAdapter().getClassName(cls);
 		List<Object> methods = getMetadataAdapter().getMethods(cls);
 		for (Object method : methods) {

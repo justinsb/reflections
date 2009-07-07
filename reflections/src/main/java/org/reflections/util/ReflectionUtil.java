@@ -13,7 +13,7 @@ public class ReflectionUtil {
 		try {
 			return Class.forName(className);
 		} catch (ClassNotFoundException e) {
-			throw new ReflectionsException("Can't reslve class name: " + className, e);
+			throw new IllegalArgumentException("Can't resolve class name: " + className, e);
 		}
 	}
 }

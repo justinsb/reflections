@@ -5,8 +5,8 @@
  */
 package org.reflections;
 
-public class ReflectionsException extends RuntimeException {
-	// TODO: ReflectionsException should really be a checked exception
+public class ReflectionsException extends Exception {
+	private static final long serialVersionUID = 1L;
 
 	public ReflectionsException(String message) {
 		super(message);

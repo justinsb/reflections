@@ -38,7 +38,7 @@ public class ReflectionsTest {
     }
 
     @Test
-    public void query() {
+    public void query() throws ReflectionsException {
         Reflections reflections = new Reflections(new TestConfiguration());
         Assert.assertTrue(
                 collectionsContained(
@@ -151,7 +151,7 @@ public class ReflectionsTest {
     }
 
     @Test
-    public void collect() {
+    public void collect() throws ReflectionsException {
         Reflections reflections = new Reflections(
                 ClasspathHelper.getUrlsForPackagePrefix("META-INF/reflections"),
                 new PatternFilter("META-INF/reflections/.*\\-reflections.xml"));
@@ -160,7 +160,7 @@ public class ReflectionsTest {
     }
 
     @Test
-    public void save() {
+    public void save() throws ReflectionsException {
         Reflections reflections = new Reflections(new TestConfiguration());
         final String destination = System.getProperty("user.dir") + "/reflections/target/classes/META-INF/reflections/" + getClass().getSimpleName() + ".xml";
 

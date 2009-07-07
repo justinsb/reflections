@@ -1,6 +1,8 @@
 package org.reflections.util;
 
 import com.google.common.collect.AbstractIterator;
+
+import org.reflections.ReflectionsException;
 import org.reflections.filters.Filter;
 
 import java.util.Iterator;

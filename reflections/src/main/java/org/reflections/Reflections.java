@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
@@ -53,8 +54,9 @@ public class Reflections {
 	private Configuration configuration;
 	private final Store store;
 	
-	/** Reflections scan according to configuration */
-	public Reflections(final Configuration configuration) {
+	/** Reflections scan according to configuration 
+	 * @throws ReflectionsException */
+	public Reflections(final Configuration configuration) throws ReflectionsException {
 		this.configuration = configuration;
 		store = new Store();
 
@@ -67,8 +69,9 @@ public class Reflections {
 		scan();
 	}
 
-	/** Reflections collect saved xml resources */
-	public Reflections(final Collection<URL> urls, final Filter<String> resourceNameFilter) {
+	/** Reflections collect saved xml resources 
+	 * @throws ReflectionsException */
+	public Reflections(final Collection<URL> urls, final Filter<String> resourceNameFilter) throws ReflectionsException {
 		store = new Store();
 		XStream xStream = new XStream();
 		ClassLoader classLoader = Utils.getEffectiveClassLoader();
@@ -81,7 +84,7 @@ public class Reflections {
 
 	//
 	@SuppressWarnings({"unchecked"})
-	protected void scan() {
+	protected void scan() throws ReflectionsException {
 		Split split = SimonManager.getStopwatch("FullScan").start();
 		Iterable<Object> classesIterator = configuration.getMetadataAdapter().iterateClasses(configuration.getUrls());
 		for (final Object cls : classesIterator) {
@@ -98,8 +101,9 @@ public class Reflections {
 		store.merge(reflections.store);
 	}
 
-	/** saves the store into a given destination as xml file */
-	public void save(final String destination) {
+	/** saves the store into a given destination as xml file 
+	 * @throws ReflectionsException */
+	public void save(final String destination) throws ReflectionsException {
 		try {
 			String xml = new XStream().toXML(store);
 			Utils.safeWriteFile(xml, new File(destination));
@@ -114,8 +118,9 @@ public class Reflections {
 	 gets all sub types in hierarchy of a given type
 	 <p/>
 	 depends on SubTypesScanner configured, otherwise an empty set is returned
+	 * @throws ReflectionsException 
 	 */
-	public <T> Set<Class<? extends T>> getSubTypesOf(Class<T> type) {
+	public <T> Set<Class<? extends T>> getSubTypesOf(Class<T> type) throws ReflectionsException {
 		//noinspection RedundantTypeArguments
 		return Utils.<T>forNames(getAllSubTypesInHierarchy(type.getName()));
 	}
@@ -124,8 +129,9 @@ public class Reflections {
 	 get all types annotated with a given annotation class in hierarchy
 	 <p/>
 	 depends on ClassAnnotationsScanner configured, otherwise an empty set is returned
+	 * @throws ReflectionsException 
 	 */
-	public Set<Class<?>> getTypesAnnotatedWith(Class<? extends Annotation> annotation) {
+	public Set<Class<?>> getTypesAnnotatedWith(Class<? extends Annotation> annotation) throws ReflectionsException {
 		Set<String> result = new HashSet<String>();
 
 		for (String aClass : getAllAnnotatedWithInHierarchy(annotation.getName())) {
@@ -144,8 +150,9 @@ public class Reflections {
 	 including annotation member values matching
 	 <p/>
 	 depends on ClassAnnotationsScanner configured, otherwise an empty set is returned
+	 * @throws ReflectionsException 
 	 */
-	public Set<Class<?>> getTypesAnnotatedWith(Annotation annotation) {
+	public Set<Class<?>> getTypesAnnotatedWith(Annotation annotation) throws ReflectionsException {
 		Set<Class<?>> result = new HashSet<Class<?>>();
 
 		final Class<? extends Annotation> annotationType = annotation.annotationType();
@@ -165,8 +172,9 @@ public class Reflections {
 	 Get all methods annotated with a given annotation class
 	 <p/>
 	 Depends on MethodAnnotationsScanner configured, otherwise an empty set is returned
+	 * @throws ReflectionsException 
 	 */
-	public Set<Method> getMethodsAnnotatedWith(Class<? extends Annotation> annotation) {
+	public Set<Method> getMethodsAnnotatedWith(Class<? extends Annotation> annotation) throws ReflectionsException {
 		Collection<String> annotatedWith = store.get(MethodAnnotationsScanner.indexName).get(annotation.getName());
 		if (annotatedWith != null) {
 			return ImmutableSet.copyOf(ForkJoinerWrapper.parallelTransform(configuration.getForkJoiner(), annotatedWith, new Function<String, Method>() {
@@ -192,8 +200,9 @@ public class Reflections {
 	 including annotation member values matching
 	 <p/>
 	 depends on ClassAnnotationsScanner configured, otherwise an empty set is returned
+	 * @throws ReflectionsException 
 	 */
-	public Set<Method> getMethodsAnnotatedWith(Annotation annotation) {
+	public Set<Method> getMethodsAnnotatedWith(Annotation annotation) throws ReflectionsException {
 		Set<Method> result = Sets.newHashSet();
 
 		final Class<? extends Annotation> annotationType = annotation.annotationType();
@@ -213,8 +222,9 @@ public class Reflections {
 	 get all fields annotated with a given annotation class
 	 <p/>
 	 depends on FieldAnnotationsScanner configured, otherwise an empty set is returned
+	 * @throws ReflectionsException 
 	 */
-	public Set<Field> getFieldsAnnotatedWith(Class<? extends Annotation> annotation) {
+	public Set<Field> getFieldsAnnotatedWith(Class<? extends Annotation> annotation) throws ReflectionsException {
 		Collection<String> annotatedWith = store.get(FieldAnnotationsScanner.indexName).get(annotation.getName());
 		if (annotatedWith != null) {
 			return ImmutableSet.copyOf(ForkJoinerWrapper.parallelTransform(configuration.getForkJoiner(), annotatedWith, new Function<String, Field>() {
@@ -240,8 +250,9 @@ public class Reflections {
 	 including annotation member values matching
 	 <p/>
 	 depends on ClassAnnotationsScanner configured, otherwise an empty set is returned
+	 * @throws ReflectionsException 
 	 */
-	public Set<Field> getFieldsAnnotatedWith(Annotation annotation) {
+	public Set<Field> getFieldsAnnotatedWith(Annotation annotation) throws ReflectionsException {
 		Set<Field> result = Sets.newHashSet();
 
 		final Class<? extends Annotation> annotationType = annotation.annotationType();
@@ -264,8 +275,9 @@ public class Reflections {
 	 @param to   - the required return type
 	 <p/>
 	 depends on ConvertersScanner configured, otherwise an empty set is returned
+	 * @throws ReflectionsException 
 	 */
-	public Set<Method> getConverters(final Class<?> from, final Class<?> to) {
+	public Set<Method> getConverters(final Class<?> from, final Class<?> to) throws ReflectionsException {
 		Set<Method> result = Sets.newHashSet();
 
 		String converterKey = ConvertersScanner.getConverterKey(from, to);
@@ -310,14 +322,17 @@ public class Reflections {
 		return result;
 	}
 
-	/** returns a map where keys are annotation's method name and value is the returned value from that method */
-	protected Map<String/*parameter name*/, Object/*value*/> getAnnotationMap(Annotation annotation) {
+	/** returns a map where keys are annotation's method name and value is the returned value from that method 
+	 * @throws ReflectionsException */
+	protected Map<String/*parameter name*/, Object/*value*/> getAnnotationMap(Annotation annotation) throws ReflectionsException {
 		final Method[] methods = annotation.annotationType().getDeclaredMethods();
 		Map<String, Object> parameters = new HashMap<String, Object>(methods.length);
 		for (final Method method : methods) {
 			try {
 				parameters.put(method.getName(), method.invoke(annotation));
-			} catch (Exception e) {
+			} catch (IllegalAccessException e) {
+				throw new ReflectionsException("Error while invoking method " + method, e);
+			} catch (InvocationTargetException e) {
 				throw new ReflectionsException("Error while invoking method " + method, e);
 			}
 		}
@@ -325,10 +340,10 @@ public class Reflections {
 		return parameters;
 	}
 
-	protected static Method getMethodFromString(String method) throws ReflectionsException {
+	protected static Method getMethodFromString(String method) {
 		Matcher matcher = METHOD_PATTERN.matcher(method);
 		if (!matcher.matches()) {
-			throw new ReflectionsException("method " + method + " doesn't fit the method regex pattern. This is probably a problem with the pattern.");
+			throw new IllegalArgumentException("Method " + method + " doesn't fit the method regex pattern. This is probably a problem with the pattern.");
 		}
 		matcher.group(1);
 		String className = matcher.group(1);
@@ -340,18 +355,18 @@ public class Reflections {
 		try {
 			return resolveClass(className).getMethod(methodName, p);
 		} catch (NoSuchMethodException e) {
-			throw new ReflectionsException("Can't resolve method named " + methodName, e);
+			throw new IllegalArgumentException("Can't resolve method named " + methodName, e);
 		}
 	}
 
-	protected static Field getFieldFromString(String field) {
+	protected static Field getFieldFromString(String field) throws IllegalArgumentException {
 		String className = field.substring(0, field.lastIndexOf('.'));
 		String fieldName = field.substring(field.lastIndexOf('.') + 1);
 
 		try {
 			return resolveClass(className).getDeclaredField(fieldName);
 		} catch (NoSuchFieldException e) {
-			throw new ReflectionsException("Can't resolve field named " + fieldName, e);
+			throw new IllegalArgumentException("Can't resolve field named " + fieldName, e);
 		}
 	}
 }

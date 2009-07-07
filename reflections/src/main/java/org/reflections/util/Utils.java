@@ -7,12 +7,14 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.reflections.ReflectionsException;
+
 /**
  *
  */
 public abstract class Utils {
 
-    public static <T> Set<Class<? extends T>> forNames(final Collection<String> classes) {
+    public static <T> Set<Class<? extends T>> forNames(final Collection<String> classes) throws ReflectionsException {
         Set<Class<? extends T>> result = new HashSet<Class<? extends T>>(classes.size());
         for (String className : classes) {
 			result.add((Class<? extends T>) ReflectionUtil.resolveClass(className));

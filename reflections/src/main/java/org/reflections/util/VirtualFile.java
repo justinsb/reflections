@@ -20,161 +20,174 @@ import org.reflections.ReflectionsException;
  * a File and JarFile bridge
  */
 public abstract class VirtualFile {
-    public abstract InputStream getInputStream();
+	public abstract InputStream getInputStream() throws IOException;
 
-    public abstract String getName();
+	public abstract String getName();
 
-    //
-    public static VirtualFile create(final File file) {
-        return new VirtualFile() {
-            public InputStream getInputStream() {
-                try {
-                    return new FileInputStream(file);
-                } catch (FileNotFoundException e) {
-                    throw new ReflectionsException("Can't open virtual file input stream " + file.getName(), e);
-                }
-            }
+	//
+	public static VirtualFile create(final File file) {
+		return new VirtualFile() {
+			public InputStream getInputStream() throws FileNotFoundException {
+				return new FileInputStream(file);
+			}
 
-            public String getName() {
-                return file.getName();
-            }
-        };
-    }
+			public String getName() {
+				return file.getName();
+			}
+		};
+	}
 
-    public static VirtualFile create(final JarFile jarFile, final JarEntry entry) {
-        return new VirtualFile() {
-            public InputStream getInputStream() {
-                try {
-                    return jarFile.getInputStream(entry);
-                } catch (IOException e) {
-                    throw new ReflectionsException("Can't open a Jar file input stream " + jarFile.getName(), e);
-                }
-            }
+	public static VirtualFile create(final JarFile jarFile, final JarEntry entry) {
+		return new VirtualFile() {
+			public InputStream getInputStream() throws IOException {
+				try {
+					return jarFile.getInputStream(entry);
+				} catch (IOException e) {
+					throw new IOException("Can't open a Jar file input stream " + jarFile.getName(), e);
+				}
+			}
 
-            public String getName() {
-                return entry.getName();
-            }
-        };
-    }
+			public String getName() {
+				return entry.getName();
+			}
+		};
+	}
 
-    //
-    public static Iterable<VirtualFile> iterable(final Collection<URL> urls) {
-        return FluentIterable.iterate(urls).fork(urls2VirtualFiles);
-    }
+	//
+	public static Iterable<VirtualFile> iterable(final Collection<URL> urls) {
+		return FluentIterable.iterate(urls).fork(urls2VirtualFiles);
+	}
 
-    public static Iterable<VirtualFile> iterable(final URL url) {
-        URI uri;
-        try {
-            uri = url.toURI();
-        } catch (URISyntaxException e) {
-            throw new ReflectionsException("Can't convert a URL to a URI: " + url, e);
-        }
+	public static Iterable<VirtualFile> iterable(final URL url) throws ReflectionsException {
+		URI uri;
+		try {
+			uri = url.toURI();
+		} catch (URISyntaxException e) {
+			throw new ReflectionsException("Can't convert a URL to a URI: " + url, e);
+		}
 
 		File file = new File(uri);
 		if (!file.exists()) {
-		    throw new ReflectionsException("File does not exist: " + url);
+			throw new ReflectionsException("File does not exist: " + url);
 		}
-		
+
 		if (file.isDirectory()) {
-            return iterable(file);
-        }
+			try {
+				return iterable(file);
+			} catch (IOException e) {
+				throw new ReflectionsException("Could not iterate over directory: " + url, e);
+			}
+		}
 
-        if (isJar(url)) {
-            try {
-                return iterable(new JarFile(file));
-            } catch (IOException e) {
-                throw new ReflectionsException("Could not iterate over Jar: " + url, e);
-            }
-        }
+		if (isJar(url)) {
+			try {
+				return iterable(new JarFile(file));
+			} catch (IOException e) {
+				throw new ReflectionsException("Could not iterate over Jar: " + url, e);
+			}
+		}
 
-        throw new ReflectionsException("Could not create iterator of VirtualFiles from url " + url);
-    }
+		throw new ReflectionsException("Could not create iterator of VirtualFiles from url " + url);
+	}
 
-    public static Iterable<VirtualFile> iterable(final File dir) {
-        return new Iterable<VirtualFile>() {
-            public Iterator<VirtualFile> iterator() {
-                return new DirFilesIterator(dir);
-            }
-        };
-    }
+	public static Iterable<VirtualFile> iterable(final File dir) throws IOException {
+		if (!dir.isDirectory()) {
+			throw new IOException(dir + "is not a directory");
+		}
 
-    public static Iterable<VirtualFile> iterable(final JarFile jarFile) {
-        return new Iterable<VirtualFile>() {
-            public Iterator<VirtualFile> iterator() {
-                return new JarFileIterator(jarFile);
-            }
-        };
-    }
+		return new Iterable<VirtualFile>() {
+			public Iterator<VirtualFile> iterator() {
+				try {
+					return new DirFilesIterator(dir);
+				} catch (IOException e) {
+					throw new IllegalStateException("Error processing directory: " + dir, e);
+				}
+			}
+		};
+	}
 
-    //
-    public static boolean isJar(final URL url) {
-        return url.getFile().endsWith(".jar");
-    }
+	public static Iterable<VirtualFile> iterable(final JarFile jarFile) {
+		return new Iterable<VirtualFile>() {
+			public Iterator<VirtualFile> iterator() {
+				return new JarFileIterator(jarFile);
+			}
+		};
+	}
 
-    public static boolean isDirectory(final URL url) {
-        return url.getFile().endsWith("/");
-    }
+	//
+	public static boolean isJar(final URL url) {
+		return url.getFile().endsWith(".jar");
+	}
 
-    //
+	public static boolean isDirectory(final URL url) {
+		return url.getFile().endsWith("/");
+	}
 
-    /**
-     * iterates files recursively over a given root directory
-     */
-    public static class DirFilesIterator extends AbstractIterator<VirtualFile> {
-        private final Stack<File> fileStack;
+	//
 
-        public DirFilesIterator(final File dir) {
-            if (!dir.isDirectory()) {throw new ReflectionsException(dir + "is not a directory");}
-            fileStack = new Stack<File>();
-            fileStack.add(dir);
-        }
+	/**
+	 * iterates files recursively over a given root directory
+	 */
+	public static class DirFilesIterator extends AbstractIterator<VirtualFile> {
+		private final Stack<File> fileStack;
 
-        private void addFilesFromDir(final File dir) {
-            fileStack.addAll(Lists.newArrayList(dir.listFiles()));
-        }
+		public DirFilesIterator(final File dir) throws IOException {
+			if (!dir.isDirectory()) {
+				throw new IOException(dir + "is not a directory");
+			}
+			fileStack = new Stack<File>();
+			fileStack.add(dir);
+		}
 
-        @Override
-        protected VirtualFile computeNext() {
-            while (!fileStack.isEmpty()) {
-                File file = fileStack.pop();
+		private void addFilesFromDir(final File dir) {
+			fileStack.addAll(Lists.newArrayList(dir.listFiles()));
+		}
 
-                if (file.isDirectory()) {
-                    addFilesFromDir(file);
-                } else {
-                    return create(file);
-                }
-            }
+		@Override
+		protected VirtualFile computeNext() {
+			while (!fileStack.isEmpty()) {
+				File file = fileStack.pop();
 
-            return endOfData();
-        }
-    }
+				if (file.isDirectory()) {
+					addFilesFromDir(file);
+				} else {
+					return create(file);
+				}
+			}
 
-    /**
-     * iterates jar entries recursively(?) over a given jar file
-     */
-    public static class JarFileIterator extends AbstractIterator<VirtualFile> {
-        private final Iterator<JarEntry> entries;
-        private final JarFile jarFile;
+			return endOfData();
+		}
+	}
 
-        public JarFileIterator(final JarFile jarFile) {
-            this.jarFile = jarFile;
-            entries = Iterators.forEnumeration(jarFile.entries());
-        }
+	/**
+	 * iterates jar entries recursively(?) over a given jar file
+	 */
+	public static class JarFileIterator extends AbstractIterator<VirtualFile> {
+		private final Iterator<JarEntry> entries;
+		private final JarFile jarFile;
 
-        protected VirtualFile computeNext() {
-            if (entries.hasNext()) {
-                return create(jarFile, entries.next());
-            } else {
-                return endOfData();
-            }
-        }
-    }
+		public JarFileIterator(final JarFile jarFile) {
+			this.jarFile = jarFile;
+			entries = Iterators.forEnumeration(jarFile.entries());
+		}
 
-    public static final Transformer<URL, Iterator<VirtualFile>> urls2VirtualFiles =
-            new Transformer<URL, Iterator<VirtualFile>>() {
-                public Iterator<VirtualFile> transform(final URL url) {
-                    return VirtualFile.iterable(url).iterator();
-                }
-            };
+		protected VirtualFile computeNext() {
+			if (entries.hasNext()) {
+				return create(jarFile, entries.next());
+			} else {
+				return endOfData();
+			}
+		}
+	}
+
+	public static final Transformer<URL, Iterator<VirtualFile>> urls2VirtualFiles = new Transformer<URL, Iterator<VirtualFile>>() {
+		public Iterator<VirtualFile> transform(final URL url) {
+			try {
+				return VirtualFile.iterable(url).iterator();
+			} catch (ReflectionsException e) {
+				throw new IllegalArgumentException("Error transforming URLs", e);
+			}
+		}
+	};
 
 }

@@ -23,7 +23,7 @@ public class FieldAnnotationsScanner extends AbstractScanner {
 
 	public static final String indexName = "FieldAnnotations";
 
-	public void scan(final Object cls) {
+	public void scan(final Object cls) throws ReflectionsException {
 		final String className = getMetadataAdapter().getClassName(cls);
 		List<Object> fields = getMetadataAdapter().getFields(cls);
 		

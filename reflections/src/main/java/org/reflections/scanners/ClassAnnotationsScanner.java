@@ -28,7 +28,7 @@ public class ClassAnnotationsScanner extends AbstractScanner {
 
 	// private final ForkJoinPool forkJoinPool = new ForkJoinPool(16);
 
-	public void scan(final Object cls) {
+	public void scan(final Object cls) throws ReflectionsException {
 		final String className = getMetadataAdapter().getClassName(cls);
 		List<String> annotationTypes = getMetadataAdapter().getClassAnnotationNames(cls);
 

@@ -16,7 +16,7 @@ public class IncludeExcludeChain<T> implements Filter<T> {
 
     public IncludeExcludeChain(final IncludeExcludeFilter<T>... includeExcludeFilters) {
         if (includeExcludeFilters == null || includeExcludeFilters.length == 0) {
-            throw new ReflectionsException("IncludeExcludeChain must contain at least 1 filter.");
+            throw new IllegalArgumentException("IncludeExcludeChain must contain at least 1 filter.");
         }
 
         final IncludeExcludeFilter<T> first = includeExcludeFilters[0];

@@ -1,5 +1,7 @@
 package org.reflections.util;
 
+import org.reflections.ReflectionsException;
+
 /**
  *
  */

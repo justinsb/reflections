@@ -1,5 +1,6 @@
 package org.reflections.scanners;
 
+import org.reflections.ReflectionsException;
 import org.reflections.util.DescriptorHelper;
 
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.List;
 public class ConvertersScanner extends AbstractScanner {
     public static final String indexName = "Converters";
 
-    public void scan(final Object cls) {
+    public void scan(final Object cls) throws ReflectionsException {
 		String className = getMetadataAdapter().getClassName(cls);
 		List<Object> methods = getMetadataAdapter().getMethods(cls);
 		for (Object method : methods) {

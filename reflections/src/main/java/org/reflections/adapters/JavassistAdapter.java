@@ -85,11 +85,11 @@ public class JavassistAdapter implements MetadataAdapter<ClassFile, FieldInfo, M
         return field.getName();
     }
 
-    public String getMethodKey(final MethodInfo method) {
+    public String getMethodKey(final MethodInfo method) throws ReflectionsException {
         String descriptor = method.getDescriptor();
 		Matcher matcher = METHOD_PARAMS_PATTERN.matcher(descriptor);
 		if (!matcher.matches()) {
-			throw new ReflectionsException("The regex pattern s probably wrong.");
+			throw new ReflectionsException("The regex pattern is probably wrong.");
 		}
 		String paramDescriptor = matcher.group(1);
 
@@ -123,13 +123,18 @@ public class JavassistAdapter implements MetadataAdapter<ClassFile, FieldInfo, M
                             return endOfData();
                         } else {
                             URL url = urlsIterator.next();
-                            virtualFileIterator = VirtualFile.iterable(url).iterator();
+                            try {
+								virtualFileIterator = VirtualFile.iterable(url).iterator();
+							} catch (ReflectionsException e) {
+								throw new IllegalArgumentException("Error processing url: " + url, e);
+							}
                         }
                     } else {
                         VirtualFile virtualFile = virtualFileIterator.next();
-                        InputStream inputStream = virtualFile.getInputStream();
+                        InputStream inputStream = null;
                         BufferedInputStream bis = null;
                         try {
+                        	inputStream = virtualFile.getInputStream();
                             bis = new BufferedInputStream(inputStream);
                             DataInputStream dis = new DataInputStream(bis);
                             ClassFile classFile = new ClassFile(dis);
@@ -140,11 +145,16 @@ public class JavassistAdapter implements MetadataAdapter<ClassFile, FieldInfo, M
                         }
                         catch (IOException e) {
                             // need to filter directories and none class files
+                        	log.debug("Ignoring error reading class file", e);
                         }
                         finally {
-                            if (bis!=null) {
-                                try {bis.close();} catch (IOException e) {throw new RuntimeException(e);}
-                            }
+                            if (bis != null) {
+								try {
+									bis.close();
+								} catch (IOException e) {
+									log.warn("Ignoring error closing InputStream", e);
+								}
+							}
                         }
                     }
                 }
@@ -194,11 +204,17 @@ public class JavassistAdapter implements MetadataAdapter<ClassFile, FieldInfo, M
 				return new ClassFile(new DataInputStream(bis = new BufferedInputStream(virtualFile.getInputStream())));
             }
             catch (IOException e) {
-                log.warn(String.format("ignoring IOException while scanning %s", virtualFile.getName()));
+                log.warn(String.format("Ignoring IOException while scanning %s", virtualFile.getName()));
                 return null;
             }
             finally {
-                if (bis != null) {try {bis.close();} catch (IOException e) {throw new ReflectionsException("Can't transform a virtual file to a class file.", e);}}
+                if (bis != null) {
+					try {
+						bis.close();
+					} catch (IOException e) {
+						log.error("Ignoring error closing stream", e);
+					}
+				}
             }
         }
     };

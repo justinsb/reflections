@@ -22,8 +22,9 @@ public abstract class ClasspathHelper {
 
     /**
      * urls in current classpath from System property java.class.path
+     * @throws ReflectionsException 
      */
-    public static Collection<URL> getUrlsForCurrentClasspath() {
+    public static Collection<URL> getUrlsForCurrentClasspath() throws ReflectionsException {
         List<URL> urls = Lists.newArrayList();
 
         String javaClassPath = System.getProperty("java.class.path");
@@ -43,8 +44,9 @@ public abstract class ClasspathHelper {
 
     /**
      * actually, urls in current classpath which are directories
+     * @throws ReflectionsException 
      */
-    public static Collection<URL> getUrlsForSourcesOnly() {
+    public static Collection<URL> getUrlsForSourcesOnly() throws ReflectionsException {
         List<URL> urls = Lists.newArrayList();
 
         for (URL url : getUrlsForCurrentClasspath()) {
@@ -58,31 +60,31 @@ public abstract class ClasspathHelper {
 
     /**
      * the url that contains the given class.
+     * @throws ReflectionsException 
      */
     public static URL getUrlForClass(Class<?> aClass) {
-        String className = aClass.getName();
+		String className = aClass.getName();
 
-        URL result;
-        try {
-            final ClassLoader loader = Utils.getEffectiveClassLoader();
-            URL classUrl = loader.getResource(DescriptorHelper.classNameToResourceName(className));
-            final String resourceName = DescriptorHelper.classNameToResourceName(className);
+		try {
+			final ClassLoader loader = Utils.getEffectiveClassLoader();
+			URL classUrl = loader.getResource(DescriptorHelper.classNameToResourceName(className));
+			final String resourceName = DescriptorHelper.classNameToResourceName(className);
 
-            final String classUrlString = classUrl.toString();
-            String baseUrlName = classUrlString.substring(0, classUrlString.indexOf(resourceName));
+			final String classUrlString = classUrl.toString();
+			String baseUrlName = classUrlString.substring(0, classUrlString.indexOf(resourceName));
 
-            result = normalize(new URL(baseUrlName));
-        } catch (Exception e) {
-            throw new ReflectionsException("Can't resolve URL for class " + className, e);
-        }
-        return result;
-    }
+			return normalize(new URL(baseUrlName));
+		} catch (MalformedURLException e) {
+			throw new IllegalArgumentException("Can't resolve URL for class " + className, e);
+		}
+	}
 
     /**
      * returns a set of urls that contain resources with prefix as the given parameter, that is exist in
      * the equivalent directory within the urls of current classpath
+     * @throws ReflectionsException 
      */
-    public static Collection<URL> getUrlsForPackagePrefix(String packagePrefix) {
+    public static Collection<URL> getUrlsForPackagePrefix(String packagePrefix) throws ReflectionsException {
         final List<URL> urls = Lists.newArrayList();
         String packageResourcePrefix = DescriptorHelper.qNameToResourceName(packagePrefix);
         try {
@@ -104,8 +106,9 @@ public abstract class ClasspathHelper {
      *
      * the urls provided might be the full classpath (getUrlsForCurrentClasspath), but it is better
      * to provide a narrowed list of urls using getUrlsForPackagePrefix
+     * @throws ReflectionsException 
      */
-    public static Set<String> getMatchingJarResources(final Collection<URL> urls, final Filter<String> resourceNameFilter) {
+    public static Set<String> getMatchingJarResources(final Collection<URL> urls, final Filter<String> resourceNameFilter) throws ReflectionsException {
         final Set<String> matchingJarResources = Sets.newHashSet();
 
         for (URL url : urls) {

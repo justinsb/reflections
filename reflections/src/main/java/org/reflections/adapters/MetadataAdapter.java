@@ -4,6 +4,8 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 
+import org.reflections.ReflectionsException;
+
 /**
  *
  */
@@ -39,5 +41,5 @@ public interface MetadataAdapter<C,F,M> {
 
     String getFieldName(final F field);
 
-    String getMethodKey(final M method);
+    String getMethodKey(final M method) throws ReflectionsException;
 }
