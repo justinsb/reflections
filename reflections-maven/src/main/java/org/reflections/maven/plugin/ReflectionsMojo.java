@@ -8,6 +8,7 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal;
 import org.jfrog.maven.annomojo.annotations.MojoParameter;
 import org.jfrog.maven.annomojo.annotations.MojoPhase;
 import org.reflections.Reflections;
+import org.reflections.ReflectionsException;
 import org.reflections.adapters.JavassistAdapter;
 import org.reflections.filters.*;
 import org.reflections.scanners.ClassAnnotationsScanner;
@@ -54,18 +55,25 @@ public class ReflectionsMojo extends MvnInjectableMojoSupport {
         }
 
         //
-        Reflections reflections = new Reflections(
-                new AbstractConfiguration() {
-                    {
-                        setUrls(Arrays.asList(parseOutputDirUrl()));
-						setScanners(parseScanners());
-                        setMetadataAdapter(new JavassistAdapter());
-						applyUniversalFilter(parseFilters());
-                    }
-                });
-
-        for (String destination : parseDestinations()) {
-            reflections.save(destination.trim());
+        try
+        {
+	        Reflections reflections = new Reflections(
+	                new AbstractConfiguration() {
+	                    {
+	                        setUrls(Arrays.asList(parseOutputDirUrl()));
+							setScanners(parseScanners());
+	                        setMetadataAdapter(new JavassistAdapter());
+							applyUniversalFilter(parseFilters());
+	                    }
+	                });
+	
+	        for (String destination : parseDestinations()) {
+	            reflections.save(destination.trim());
+	        }
+        }
+        catch (ReflectionsException e)
+        {
+        	throw new MojoExecutionException("Error reflecting over java classes", e);
         }
     }
 

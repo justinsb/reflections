@@ -1,10 +1,10 @@
 package org.reflections.util;
 
 import org.reflections.Configuration;
-import org.reflections.adapters.ForkJoiner;
 import org.reflections.adapters.JavassistAdapter;
 import org.reflections.adapters.MetadataAdapter;
-import org.reflections.adapters.SimpleForkJoiner;
+import org.reflections.adapters.ParallelStrategy;
+import org.reflections.adapters.ThreadPoolParallelStrategy;
 import org.reflections.filters.Filter;
 import org.reflections.scanners.Scanner;
 
@@ -23,7 +23,7 @@ public class AbstractConfiguration implements Configuration {
     private Collection<URL> urls;
     private MetadataAdapter metadataAdapter = new JavassistAdapter();
 
-    private ForkJoiner forkJoiner = SimpleForkJoiner.buildDefault();
+    private ParallelStrategy parallelStrategy = ThreadPoolParallelStrategy.buildDefault();
 
     public List<Scanner> getScanners() {
 		return scanners;
@@ -55,11 +55,11 @@ public class AbstractConfiguration implements Configuration {
 		}
 	}
 
-	public ForkJoiner getForkJoiner() {
-		return forkJoiner;
+	public ParallelStrategy getParallelStrategy() {
+		return parallelStrategy;
 	}
 
-	public void setForkJoiner(ForkJoiner forkJoiner) {
-		this.forkJoiner = forkJoiner;
+	public void setParallelStrategy(ParallelStrategy parallelStrategy) {
+		this.parallelStrategy = parallelStrategy;
 	}
 }

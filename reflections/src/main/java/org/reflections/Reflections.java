@@ -2,15 +2,9 @@ package org.reflections;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.thoughtworks.xstream.XStream;
-//import jsr166y.forkjoin.Ops;
-//import jsr166y.forkjoin.ParallelArray;
-//import jsr166y.forkjoin.ForkJoinPool;
-import org.reflections.adapters.ForkJoiner;
-import org.reflections.adapters.ForkJoinerWrapper;
-import org.reflections.adapters.SimpleForkJoiner;
+import org.reflections.adapters.ParallelStrategyHelper;
 import org.reflections.filters.Filter;
 import org.reflections.scanners.*;
 import org.reflections.scanners.Scanner;
@@ -19,8 +13,6 @@ import org.reflections.util.DescriptorHelper;
 import org.reflections.util.Utils;
 import static org.reflections.util.ReflectionUtil.resolveClass;
 import static org.reflections.util.Utils.forNames;
-import org.javasimon.SimonManager;
-import org.javasimon.Split;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -33,7 +25,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -85,15 +76,16 @@ public class Reflections {
 	//
 	@SuppressWarnings({"unchecked"})
 	protected void scan() throws ReflectionsException {
-		Split split = SimonManager.getStopwatch("FullScan").start();
+		long start = System.currentTimeMillis();
+		
 		Iterable<Object> classesIterator = configuration.getMetadataAdapter().iterateClasses(configuration.getUrls());
 		for (final Object cls : classesIterator) {
 			for (Scanner scanner : configuration.getScanners()) {
 				scanner.scan(cls);
 			}
 		}
-		split.stop();
-		log.info("Scanning classes took " + split.stop() / 1000000 + " ms");
+		long end = System.currentTimeMillis();
+		log.info("Scanning classes took " + (end - start) + " ms");
 	}
 
 	/** merges a Reflections instance into this one */
@@ -177,11 +169,11 @@ public class Reflections {
 	public Set<Method> getMethodsAnnotatedWith(Class<? extends Annotation> annotation) throws ReflectionsException {
 		Collection<String> annotatedWith = store.get(MethodAnnotationsScanner.indexName).get(annotation.getName());
 		if (annotatedWith != null) {
-			return ImmutableSet.copyOf(ForkJoinerWrapper.parallelTransform(configuration.getForkJoiner(), annotatedWith, new Function<String, Method>() {
+			return ImmutableSet.copyOf(ParallelStrategyHelper.parallelTransform(configuration.getParallelStrategy(), annotatedWith, new Function<String, Method>() {
 				public Method apply(String annotated) {
 					return getMethodFromString(annotated);
 				}
-			}, String.class));
+			}));
 			
 //			ParallelArray<String> parallelArray = ParallelArray.createFromCopy(Iterables.toArray(annotatedWith, String.class), forkJoinPool);
 //			return ImmutableSet.of(parallelArray.withMapping(new Ops.Mapper<String, Method>() {
@@ -227,11 +219,11 @@ public class Reflections {
 	public Set<Field> getFieldsAnnotatedWith(Class<? extends Annotation> annotation) throws ReflectionsException {
 		Collection<String> annotatedWith = store.get(FieldAnnotationsScanner.indexName).get(annotation.getName());
 		if (annotatedWith != null) {
-			return ImmutableSet.copyOf(ForkJoinerWrapper.parallelTransform(configuration.getForkJoiner(), annotatedWith, new Function<String, Field>() {
+			return ImmutableSet.copyOf(ParallelStrategyHelper.parallelTransform(configuration.getParallelStrategy(), annotatedWith, new Function<String, Field>() {
 				public Field apply(String annotated) {
 					return getFieldFromString(annotated);
 				}
-			}, String.class));
+			}));
 			
 			
 //			ParallelArray<String> parallelArray = ParallelArray.createFromCopy(Iterables.toArray(annotatedWith, String.class), forkJoinPool);

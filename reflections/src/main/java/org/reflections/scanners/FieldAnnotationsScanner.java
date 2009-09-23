@@ -10,7 +10,6 @@ import java.util.concurrent.ExecutionException;
 import org.reflections.NullObject;
 import org.reflections.Reflections;
 import org.reflections.ReflectionsException;
-import org.reflections.adapters.SimpleForkJoiner;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -38,7 +37,7 @@ public class FieldAnnotationsScanner extends AbstractScanner {
 					}
 					return NullObject.NULL;
 				}
-			}, String.class);
+			});
 			
 //			ParallelArray.createFromCopy(Iterables.toArray(fieldAnnotations, String.class), forkJoinPool).apply(new Ops.Procedure<String>() {
 //				public void apply(String fieldAnnotation) {

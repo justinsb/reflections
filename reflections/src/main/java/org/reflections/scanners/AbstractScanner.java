@@ -11,9 +11,9 @@ import org.reflections.Configuration;
 import org.reflections.ReflectionsException;
 import org.reflections.filters.Filter;
 import org.reflections.filters.Any;
-import org.reflections.adapters.ForkJoiner;
-import org.reflections.adapters.ForkJoinerWrapper;
 import org.reflections.adapters.MetadataAdapter;
+import org.reflections.adapters.ParallelStrategy;
+import org.reflections.adapters.ParallelStrategyHelper;
 
 /**
  *
@@ -42,12 +42,12 @@ public abstract class AbstractScanner implements Scanner {
 		return configuration.getMetadataAdapter();
 	}
 
-	protected ForkJoiner getForkJoiner() {
-		return configuration.getForkJoiner();
+	protected ParallelStrategy getParallelStrategy() {
+		return configuration.getParallelStrategy();
 	}
 
-	protected <K, V> List<V> parallelTransform(Iterable<K> source, final Function<K, V> function, Class<K> keyClass) throws ReflectionsException {
-		return ForkJoinerWrapper.parallelTransform(getForkJoiner(), source, function, keyClass);
+	protected <K, V> List<V> parallelTransform(Iterable<K> source, final Function<K, V> function) throws ReflectionsException {
+		return ParallelStrategyHelper.parallelTransform(getParallelStrategy(), source, function);
 	}
 
 	protected void populate(final String key, final String value) {
