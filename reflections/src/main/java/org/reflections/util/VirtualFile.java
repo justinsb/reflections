@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Stack;
 import java.util.jar.JarEntry;
@@ -40,11 +41,11 @@ public abstract class VirtualFile {
 	public static VirtualFile create(final JarFile jarFile, final JarEntry entry) {
 		return new VirtualFile() {
 			public InputStream getInputStream() throws IOException {
-//				try {
-					return jarFile.getInputStream(entry);
-//				} catch (IOException e) {
-//					throw new IOException("Can't open a Jar file input stream " + jarFile.getName(), e);
-//				}
+				// try {
+				return jarFile.getInputStream(entry);
+				// } catch (IOException e) {
+				// throw new IOException("Can't open a Jar file input stream " + jarFile.getName(), e);
+				// }
 			}
 
 			public String getName() {
@@ -68,7 +69,9 @@ public abstract class VirtualFile {
 
 		File file = new File(uri);
 		if (!file.exists()) {
-			throw new ReflectionsException("File does not exist: " + url);
+			// throw new ReflectionsException("File does not exist: " + url);
+			// This isn't critical... there are no jars to iterate if the file doesn't exist!
+			return Collections.emptyList();
 		}
 
 		if (file.isDirectory()) {
